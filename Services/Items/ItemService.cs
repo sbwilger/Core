@@ -12,6 +12,8 @@ namespace sbwilger.Core.Services.Items
 {
     public interface IItemService
     {
+        Task CreateNewItemAsync(Item item);
+
         Task<Item> GetItemByName(string itemName);
     }
 
@@ -22,6 +24,13 @@ namespace sbwilger.Core.Services.Items
         public ItemService(RPGContext context)
         {
             _context = context;
+        }
+
+        public async Task CreateNewItemAsync(Item item)
+        {
+            await _context.AddAsync(item).ConfigureAwait(false);
+
+            await _context.SaveChangesAsync().ConfigureAwait(false);
         }
 
         public async Task<Item> GetItemByName(string itemName)
