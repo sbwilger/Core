@@ -16,16 +16,18 @@ namespace sbwilger.Core.Services.Profiles
 
     public class ProfileService : IProfileService
     {
-        private readonly RPGContext _context;
+        private readonly DbContextOptions<RPGContext> _options;
 
-        public ProfileService(RPGContext context)
+        public ProfileService(DbContextOptions<RPGContext> options)
         {
-            _context = context;
+            _options = options;
         }
 
         public async Task<Profile> GetOrCreateProfileAsync(ulong discordId, ulong guildId)
         {
-            Profile profile = await _context.Profiles.Where(x => x.GuildId == guildId).FirstOrDefaultAsync(x => x.DiscordId == discordId).ConfigureAwait(false);
+            using var context = new RPGContext(_options);
+
+            Profile profile = await context.Profiles.Where(x => x.GuildId == guildId).FirstOrDefaultAsync(x => x.DiscordId == discordId).ConfigureAwait(false);
 
             if(profile != null)
             {
@@ -38,7 +40,9 @@ namespace sbwilger.Core.Services.Profiles
                 GuildId = guildId
             };
 
-            await _context.SaveChangesAsync().ConfigureAwait(false);
+            context.Add(profile);
+
+            await context.SaveChangesAsync().ConfigureAwait(false);
 
             return profile;
         }

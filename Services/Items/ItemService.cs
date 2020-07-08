@@ -19,25 +19,27 @@ namespace sbwilger.Core.Services.Items
 
     public class ItemService : IItemService
     {
-        private readonly RPGContext _context;
+        private readonly DbContextOptions<RPGContext> _options;
 
-        public ItemService(RPGContext context)
+        public ItemService(DbContextOptions<RPGContext> options)
         {
-            _context = context;
+            _options = options;
         }
 
         public async Task CreateNewItemAsync(Item item)
         {
-            await _context.AddAsync(item).ConfigureAwait(false);
+            using var context = new RPGContext(_options);
 
-            await _context.SaveChangesAsync().ConfigureAwait(false);
+            context.Add(item);
+
+            await context.SaveChangesAsync().ConfigureAwait(false);
         }
 
         public async Task<Item> GetItemByName(string itemName)
         {
-            itemName = itemName.ToLower();
+            using var context = new RPGContext(_options);
 
-            return await _context.Items.FirstOrDefaultAsync(x => x.Name.ToLower() == itemName).ConfigureAwait(false);
+            return await context.Items.FirstOrDefaultAsync(x => x.Name.ToLower() == itemName.ToLower()).ConfigureAwait(false);
         }
 
     }
